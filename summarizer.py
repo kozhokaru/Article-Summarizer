@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import os
 import openai
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()  # reads .env
 
@@ -27,8 +28,13 @@ def summarize_url(url: str) -> str:
     return call_openai(prompt)
 
 def fetch_article_text(url: str) -> str:
-    resp = requests.get(url, timeout=10)
-    resp.raise_for_status()
+    try:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+    except Exception as e:
+        logger.error("Failed to fetch %s: %s", url, e)
+        raise
+
     soup = BeautifulSoup(resp.text, "html.parser")
     # Naïve approach: join all <p> tags
     paragraphs = soup.find_all("p")
